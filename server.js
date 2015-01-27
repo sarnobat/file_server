@@ -5,12 +5,11 @@ var puts = sys.puts;
 
 var app = express();
 
-app.get('/dups/all', function(req, res) {
+app.get('/files/tree', function(req, res) {
 	
-	/*var location = "/media/sarnobat/e/Sridhar/Photos/camera phone photos/iPhone/";
-	var type = "dups_excess_only.txt";
+	var location = "/media/sarnobat/e/Sridhar/Photos/camera phone photos/iPhone/";
 	{
-		exec("cat '"+location+"/"+type+"'", function (error, stdout, stderr) { 
+		exec("tree -J '" + location + "'", function (error, stdout, stderr) { 
 			if (error != null) {
 				puts("ERROR:" + stderr);
 			}
@@ -19,14 +18,12 @@ app.get('/dups/all', function(req, res) {
 			var json = {};
 			json[location] =lines ;
 
-            res.header("Access-Control-Allow-Origin", "*");
+    		        res.header("Access-Control-Allow-Origin", "*");
 			res.send(json);
 		});
-	}*/
-	res.header("Access-Control-Allow-Origin", "*");
-	res.send({ parameter_you_sent : req.query.locations});
+	}
 });
 
 
 app.listen(4453);
-console.log('Listening on port http://netgear.rohidekar.com:4453/dups/all');
+console.log('Listening on port http://netgear.rohidekar.com:4453/files/tree');

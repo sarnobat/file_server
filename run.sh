@@ -1,2 +1,2 @@
-open index.html
+#open index.html
 node server.js
