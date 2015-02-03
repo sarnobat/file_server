@@ -15,15 +15,24 @@ $(document).ready(function(){
 		$.each(result, function(i, field){
 			var dirPath = i;
 			var contents = field[0].contents;
-			$("#items").append(i + ": " + field + "<br>");
+	//		$("#items").append(i + ": " + field + "<br>");
 			$.each(contents, function(file) {
+				var filePath = dirPath + '/' +contents[file].name;
 				console.log(dirPath + '/' +contents[file].name);
+				var httpUrl = getHttpUrlForLocalAsset(filePath);
+				$("#items").append('<a href="' + httpUrl + '">' + filePath  + "</a><br>");
 			});
 			$("#status").append("Success");
 		});
 	});
 
 });
+
+function getHttpUrlForLocalAsset(localFilePath) {
+	var httpUrl = localFilePath.replace(/.*\/e\/new/g, 'http://netgear.rohidekar.com:8025');
+	return httpUrl;
+}
+
 </script>
 </head>
 <body>
