@@ -5,9 +5,9 @@ var puts = sys.puts;
 
 var app = express();
 
-app.get('/files/tree', function(req, res) {
-	
-	var location = "/media/sarnobat/e/Sridhar/Photos/camera phone photos/iPhone/";
+app.get('/files/tree', function(request, res) {
+
+	var location = request.query.locations;//"/media/sarnobat/e/Sridhar/Photos/camera phone photos/iPhone/";
 	{
 		exec("tree -J '" + location + "'", function (error, stdout, stderr) { 
 			if (error != null) {
@@ -26,4 +26,4 @@ app.get('/files/tree', function(req, res) {
 
 
 app.listen(4453);
-console.log('Listening on port http://netgear.rohidekar.com:4453/files/tree');
+console.log('Listening.');
