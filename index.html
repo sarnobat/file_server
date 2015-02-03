@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-<!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"> -->
-<script src="jquery/jquery-1.9.1.js">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"> 
 </script>
+<!-- script src="jquery/jquery-1.9.1.js" -->
 <script>
 $(document).ready(function(){
 
-	var host = "localhost";//"netgear.rohidekar.com";
-	var url = "http://" + host + ":4453/dups/all?locations="
+	var host = "netgear.rohidekar.com";
+	var url = "http://" + host + ":4453/files/tree?locations="
 		+ encodeURIComponent($("#locations").html());
 	
 	$.getJSON(url,function(result){
 		$.each(result, function(i, field){
-			$("#items").append(i + ": <b>" + field + "<b>");
+			var dirPath = i;
+			var contents = field[0].contents;
+			$("#items").append(i + ": " + field + "<br>");
+			$.each(contents, function(file) {
+				console.log(dirPath + '/' +contents[file].name);
+			});
 			$("#status").append("Success");
 		});
 	});
@@ -23,7 +28,7 @@ $(document).ready(function(){
 </head>
 <body>
 
-<textarea id="locations">My Name</textarea>
+<textarea id="locations">/media/sarnobat/e/new/screenshots</textarea>
 <br>
 <br>
 <div id="items"></div>
