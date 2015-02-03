@@ -3,13 +3,40 @@
 <head>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"> 
 </script>
+<script type="text/javascript" src="http://netgear.rohidekar.com/yurl/jquery/purl.js"></script>
 <!-- script src="jquery/jquery-1.9.1.js" -->
 <script>
 $(document).ready(function(){
+	render();
+});
 
+
+
+function updateURLIfEmpty() {
+        var locations = $.url().param('locations');
+        if (locations == null || locations == '') {
+                        updateURL();
+        } else {
+                $("#locations").val(decodeURIComponent(locations));
+        }
+
+        limit = $.url().param('limit');
+                if (limit == null) {
+                        window.history.pushState("object or string", "Title", document.URL + "&limit=" + 20);
+                }
+}
+
+
+function updateURL() {
+        history.pushState(null, null, '/file_server?locations=' + encodeURIComponent($("#locations").val())); // HTML5
+}
+
+function render() {
+        updateURLIfEmpty();
+	$("#items").html("");
 	var host = "netgear.rohidekar.com";
 	var url = "http://" + host + ":4453/files/tree?locations="
-		+ encodeURIComponent($("#locations").html());
+		+ encodeURIComponent($.url().param("locations"));
 	
 	$.getJSON(url,function(result){
 		$.each(result, function(i, field){
@@ -20,24 +47,48 @@ $(document).ready(function(){
 				var filePath = dirPath + '/' +contents[file].name;
 				console.log(dirPath + '/' +contents[file].name);
 				var httpUrl = getHttpUrlForLocalAsset(filePath);
-				$("#items").append('<a href="' + httpUrl + '">' + filePath  + "</a><br>");
+				var fileDescriptor = contents[file];
+				var element;
+				if (fileDescriptor.type == 'file') {
+					if (isImage(filePath)) {
+                                                element = "<img src='" + httpUrl + "' alt='" + filePath  + "' width=400>";
+					} else if (isVideo(filePath)) {
+					} else if (isAudio(filePath)) {
+					} else {
+						element = '<a href="' + httpUrl + '">' + filePath  + "</a>";
+					}
+				} else if (fileDescriptor.type == 'directory') {
+			         	element = '<h3><a href="' + httpUrl + '">' + filePath  + "</a></h3>";
+				}
+				$("#items").append(element + "<br>");
 			});
 			$("#status").append("Success");
 		});
 	});
 
-});
+}
 
 function getHttpUrlForLocalAsset(localFilePath) {
 	var httpUrl = localFilePath.replace(/.*\/e\/new/g, 'http://netgear.rohidekar.com:8025');
 	return httpUrl;
 }
 
+function isImage(localFilePath) {
+        return localFilePath.match(/.*png/);
+}
+
+function isVideo(localFilePath) {
+	return false;
+}
+
+function isAudio(localFilePath) {
+	return false;
+}
 </script>
 </head>
 <body>
 
-<textarea id="locations">/media/sarnobat/e/new/screenshots</textarea>
+<textarea id="locations" onblur="updateURL()">/media/sarnobat/e/new/</textarea>
 <br>
 <br>
 <div id="items"></div>

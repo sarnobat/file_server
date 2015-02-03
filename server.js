@@ -11,7 +11,7 @@ app.get('/files/tree', function(request, res) {
 	var location = request.query.locations;//"/media/sarnobat/e/Sridhar/Photos/camera phone photos/iPhone/";
 	console.log("Locations: specified by client: " + location);
 	{
-		var command = "tree -J '" + location + "'";
+		var command = "tree -L 2 -J '" + location + "'";
 		console.log("Command executed:\n\t" + command);
 		exec(command, function (error, stdout, stderr) { 
 			if (error != null) {
