@@ -44,6 +44,24 @@ function render() {
 			var contents = field[0].contents;
 	//		$("#items").append(i + ": " + field + "<br>");
 			$.each(contents, function(file) {
+				 var filePath = dirPath + '/' +contents[file].name;
+                                console.log(dirPath + '/' +contents[file].name);
+                                var httpUrl = getHttpUrlForLocalAsset(filePath);
+                                var fileDescriptor = contents[file];
+                                var element;
+				 if (fileDescriptor.type == 'file') {
+                                        if (isImage(filePath)) {
+                                                element = "<img src='" + httpUrl + "' alt='" + filePath  + "' height=100>";
+                                		$("#items").append(element + "&nbsp;");
+                                        } else if (isVideo(filePath)) {
+                                        } else if (isAudio(filePath)) {
+                                        } else {
+                                        }
+                                } else if (fileDescriptor.type == 'directory') {
+                                }
+			});
+                          
+			$.each(contents, function(file) {
 				var filePath = dirPath + '/' +contents[file].name;
 				console.log(dirPath + '/' +contents[file].name);
 				var httpUrl = getHttpUrlForLocalAsset(filePath);
@@ -51,7 +69,6 @@ function render() {
 				var element;
 				if (fileDescriptor.type == 'file') {
 					if (isImage(filePath)) {
-                                                element = "<img src='" + httpUrl + "' alt='" + filePath  + "' width=400>";
 					} else if (isVideo(filePath)) {
 					} else if (isAudio(filePath)) {
 					} else {
@@ -70,11 +87,13 @@ function render() {
 
 function getHttpUrlForLocalAsset(localFilePath) {
 	var httpUrl = localFilePath.replace(/.*\/e\/new/g, 'http://netgear.rohidekar.com:8025');
+	httpUrl = localFilePath.replace(/.*\/e\/Drive J/g, 'http://netgear.rohidekar.com:8026');
+	httpUrl = localFilePath.replace(/.*\/e\/Sridhar\/Photos/g, "http://netgear.rohidekar.com:8022");
 	return httpUrl;
 }
 
 function isImage(localFilePath) {
-        return localFilePath.match(/.*png/);
+        return localFilePath.match(/.*(png)|(jpg)|(jpeg)|(gif)/i);
 }
 
 function isVideo(localFilePath) {
