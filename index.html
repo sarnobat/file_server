@@ -43,26 +43,23 @@ function render() {
 	$.getJSON(url,function(result){
 		$.each(result, function(i, field){
 			var dirPath = i;
-			var contents = field[0].contents;
+			var fileDescriptor = field[0];
+			var contents = fileDescriptor.contents;
 	//		$("#items").append(i + ": " + field + "<br>");
-			$.each(contents, function(file) {
-				 var filePath = dirPath + '/' +contents[file].name;
-                                console.log(dirPath + '/' +contents[file].name);
-                                var httpUrl = getHttpUrlForLocalAsset(filePath);
-                                var fileDescriptor = contents[file];
-                                var element;
-				 if (fileDescriptor.type == 'file') {
-						if (isImage(filePath)) {
-							var element = "<img src='" + httpUrl + "' alt='" + filePath  + "' height=100>";
-							$("#items").append(element + "&nbsp;");
-						} else if (isVideo(filePath)) {
-						} else if (isAudio(filePath)) {
-						} else {
-						}
+//			$.each(contents, function(file) {
+				if (fileDescriptor.type == 'file') {
+					var fileDescriptor = contents[file];
+					var element = renderFile(dirPath, fileDescriptor);
+					$("#items").append(element + "&nbsp;");
 				} else if (fileDescriptor.type == 'directory') {
+					var html = renderDirectory("", fileDescriptor);
+					$("#items").append(html);
+				} else {
+					alert(fileDescriptor.type);
 				}
-			});
-                          
+//			});
+                  
+                  /*        
 			$.each(contents, function(file) {
 				var filePath = dirPath + '/' +contents[file].name;
 				console.log(dirPath + '/' +contents[file].name);
@@ -81,15 +78,48 @@ function render() {
 					element += renderDirectory(fileDescriptor);
 				}
 				$("#items").append(element + "<br>");
-			});
+			});*/
 			$("#status").append("Success");
 		});
 	});
 
 }
 
-function renderDirectory(directoryDescriptor) {
-	return " a directory<br>";
+function renderFile(dirPath, fileDescriptor) {
+	
+	var filePath = dirPath + '/' +fileDescriptor.name;
+	console.log(dirPath + '/' +fileDescriptor.name);
+	var httpUrl = getHttpUrlForLocalAsset(filePath);
+	var element;
+
+	if (isImage(filePath)) {
+		element = "<img src='" + httpUrl + "' alt='" + filePath  + "' height=100>";
+		
+	} else if (isVideo(filePath)) {
+	} else if (isAudio(filePath)) {
+	} else {
+	}
+	return element;
+
+}
+function renderDirectory(parentDirPath, directoryDescriptor) {
+	var filePath = directoryDescriptor.name;
+	var dirPath = parentDirPath + '/' + filePath;
+	var html = '<h3><a href=http://netgear.rohidekar.com/file_server/?locations="' + encodeURIComponent(filePath) + '">' + filePath  + "</a></h3>";
+	var contents = directoryDescriptor.contents;
+	$.each(contents, function(file) {
+		var filePath = dirPath + '/' +contents[file].name;
+		console.log(dirPath + '/' +contents[file].name);
+		var httpUrl = getHttpUrlForLocalAsset(filePath);
+		var fileDescriptor = contents[file];
+		var element;
+		if (fileDescriptor.type == 'file') {
+			html += renderFile(dirPath, fileDescriptor);
+		} else if (fileDescriptor.type == 'directory') {
+			html += renderDirectory(dirPath, fileDescriptor);
+		}
+	});
+	return html;
 }
 
 function getHttpUrlForLocalAsset(localFilePath) {
