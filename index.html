@@ -105,8 +105,10 @@ function renderFile(dirPath, fileDescriptor) {
 function renderDirectory(parentDirPath, directoryDescriptor) {
 	var filePath = directoryDescriptor.name;
 	var dirPath = parentDirPath + '/' + filePath;
-	var html = '<h3><a href=http://netgear.rohidekar.com/file_server/?locations="' + encodeURIComponent(filePath) + '">' + filePath  + "</a></h3>";
+	var html = '<h3><a href=http://netgear.rohidekar.com/file_server/?locations="' + encodeURIComponent(dirPath) + '">' + dirPath  + "</a></h3>";
 	var contents = directoryDescriptor.contents;
+	
+	var imageCount = 0;
 	$.each(contents, function(file) {
 		var filePath = dirPath + '/' +contents[file].name;
 		console.log(dirPath + '/' +contents[file].name);
@@ -114,7 +116,10 @@ function renderDirectory(parentDirPath, directoryDescriptor) {
 		var fileDescriptor = contents[file];
 		var element;
 		if (fileDescriptor.type == 'file') {
-			html += renderFile(dirPath, fileDescriptor);
+			if (imageCount < 3) {
+				html += renderFile(dirPath, fileDescriptor);
+				++imageCount;
+			}
 		} else if (fileDescriptor.type == 'directory') {
 			html += renderDirectory(dirPath, fileDescriptor);
 		}
@@ -142,7 +147,7 @@ function isAudio(localFilePath) {
 }
 </script>
 </head>
-<body>
+<body style="background-color : #FFE6EA">
 
 <script> 
     $(function(){
