@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"> 
-</script>
+
+<title>File Server</title>
+<link rel="shortcut icon" href="http://netgear.rohidekar.com/static/icons/Orb_Icons_001.png" type="image/x-icon" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript" src="http://netgear.rohidekar.com/yurl/jquery/purl.js"></script>
 <!-- script src="jquery/jquery-1.9.1.js" -->
 <script>
@@ -50,15 +52,15 @@ function render() {
                                 var fileDescriptor = contents[file];
                                 var element;
 				 if (fileDescriptor.type == 'file') {
-                                        if (isImage(filePath)) {
-                                                element = "<img src='" + httpUrl + "' alt='" + filePath  + "' height=100>";
-                                		$("#items").append(element + "&nbsp;");
-                                        } else if (isVideo(filePath)) {
-                                        } else if (isAudio(filePath)) {
-                                        } else {
-                                        }
-                                } else if (fileDescriptor.type == 'directory') {
-                                }
+						if (isImage(filePath)) {
+							var element = "<img src='" + httpUrl + "' alt='" + filePath  + "' height=100>";
+							$("#items").append(element + "&nbsp;");
+						} else if (isVideo(filePath)) {
+						} else if (isAudio(filePath)) {
+						} else {
+						}
+				} else if (fileDescriptor.type == 'directory') {
+				}
 			});
                           
 			$.each(contents, function(file) {
@@ -75,7 +77,8 @@ function render() {
 						element = '<a href="' + httpUrl + '">' + filePath  + "</a>";
 					}
 				} else if (fileDescriptor.type == 'directory') {
-			         	element = '<h3><a href="' + httpUrl + '">' + filePath  + "</a></h3>";
+					element = '<h3><a href=http://netgear.rohidekar.com/file_server/?locations="' + encodeURIComponent(filePath) + '">' + filePath  + "</a></h3>";
+					element += renderDirectory(fileDescriptor);
 				}
 				$("#items").append(element + "<br>");
 			});
@@ -85,10 +88,14 @@ function render() {
 
 }
 
+function renderDirectory(directoryDescriptor) {
+	return " a directory<br>";
+}
+
 function getHttpUrlForLocalAsset(localFilePath) {
 	var httpUrl = localFilePath.replace(/.*\/e\/new/g, 'http://netgear.rohidekar.com:8025');
-	httpUrl = localFilePath.replace(/.*\/e\/Drive J/g, 'http://netgear.rohidekar.com:8026');
-	httpUrl = localFilePath.replace(/.*\/e\/Sridhar\/Photos/g, "http://netgear.rohidekar.com:8022");
+	httpUrl = httpUrl.replace(/.*\/e\/Drive J/g, 'http://netgear.rohidekar.com:8026');
+	httpUrl = httpUrl.replace(/.*\/e\/Sridhar\/Photos/g, "http://netgear.rohidekar.com:8022");
 	return httpUrl;
 }
 
@@ -106,6 +113,13 @@ function isAudio(localFilePath) {
 </script>
 </head>
 <body>
+
+<script> 
+    $(function(){
+      $("#menubar").load("http://netgear.rohidekar.com/index.html"); 
+    });
+</script>
+<div id="menubar"></div>
 
 <textarea id="locations" onblur="updateURL()">/media/sarnobat/e/new/</textarea>
 <br>
