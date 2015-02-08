@@ -13,15 +13,20 @@ app.get('/files/tree', function(request, res) {
 	{
 		var command = "tree -L 2 -J '" + location + "'";
 		console.log("Command executed:\n\t" + command);
-		exec(command, function (error, stdout, stderr) { 
+		exec(command,  {
+    maxBuffer: 2000 * 1024 //quick fix
+    }, function (error, stdout, stderr) { 
 			if (error != null) {
 				puts("ERROR:" + stderr);
 			}
 			var lines = stdout;//stdout.split( "\n" );
 			puts(lines);
 			puts(lines.length);
+			console.log("location: " + location);
 			var json = {};
-			json[location] = JSON.parse(lines) ;
+			locationJson = JSON.parse(lines);
+			console.log("locationJson: " + locationJson);
+			json[location] = locationJson;
 			console.log(json);
 
     		        res.header("Access-Control-Allow-Origin", "*");
