@@ -94,22 +94,22 @@ function renderFile(dirPath, fileDescriptor) {
 //	console.log(dirPath + '/' +fileDescriptor.name);
 	var httpUrl = getHttpUrlForLocalAsset(filePath);
 	var element;
-
+	var linebreak = "";
 	if (isImage(filePath) && totalImagesDisplayed < 50) {
 		element = "<img src='" + httpUrl + "' alt='" + filePath  + "' height=100>";
 		
 	} else if (isVideo(filePath)) {
 	} else if (isAudio(filePath)) {
 	} else {
-		element = filePath + "<br>";
+		element = filePath;
+		linebreak = "<br>";
 	}
 	if (element) {
 		++totalImagesDisplayed;
 	} else {
 		debugger;
 	}
-	return element;
-
+	return linebreak + "<a href ='" + httpUrl  + "'>" + element +"</a>";
 }
 function renderDirectory(parentDirPath, directoryDescriptor) {
 	var filePath = directoryDescriptor.name;
