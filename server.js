@@ -11,7 +11,7 @@ app.get('/files/tree', function(request, res) {
 	var location = request.query.locations;//"/media/sarnobat/e/Sridhar/Photos/camera phone photos/iPhone/";
 	console.log("Locations: specified by client: " + location);
 	{
-		var command = "tree -L 2 -J '" + location + "'";
+		var command = "tree -L 3 -J '" + location + "'";
 		console.log("Command executed:\n\t" + command);
 		exec(command,  {
     maxBuffer: 2000 * 1024 //quick fix

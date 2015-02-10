@@ -12,7 +12,7 @@ $(document).ready(function(){
 	render();
 });
 
-
+var totalImagesDisplayed = 0;
 
 function updateURLIfEmpty() {
         var locations = $.url().param('locations');
@@ -35,6 +35,7 @@ function updateURL() {
 
 function render() {
         updateURLIfEmpty();
+        totalImagesDisplayed = 0;
 	$("#items").html("");
 	var host = "netgear.rohidekar.com";
 	var url = "http://" + host + ":4453/files/tree?locations="
@@ -86,18 +87,26 @@ function render() {
 }
 
 function renderFile(dirPath, fileDescriptor) {
-	
+//	if (totalImagesDisplayed > 50) {
+//		return "";
+//	}
 	var filePath = dirPath + '/' +fileDescriptor.name;
-	console.log(dirPath + '/' +fileDescriptor.name);
+//	console.log(dirPath + '/' +fileDescriptor.name);
 	var httpUrl = getHttpUrlForLocalAsset(filePath);
 	var element;
 
-	if (isImage(filePath)) {
+	if (isImage(filePath) && totalImagesDisplayed < 50) {
 		element = "<img src='" + httpUrl + "' alt='" + filePath  + "' height=100>";
 		
 	} else if (isVideo(filePath)) {
 	} else if (isAudio(filePath)) {
 	} else {
+		element = filePath + "<br>";
+	}
+	if (element) {
+		++totalImagesDisplayed;
+	} else {
+		debugger;
 	}
 	return element;
 
@@ -111,19 +120,26 @@ function renderDirectory(parentDirPath, directoryDescriptor) {
 	var imageCount = 0;
 	$.each(contents, function(file) {
 		var filePath = dirPath + '/' +contents[file].name;
-		console.log(dirPath + '/' +contents[file].name);
+	//	console.log(dirPath + '/' +contents[file].name);
 		var httpUrl = getHttpUrlForLocalAsset(filePath);
 		var fileDescriptor = contents[file];
 		var element;
+		var renderedFile = "";
 		if (fileDescriptor.type == 'file') {
 			if (imageCount < 3) {
-				html += renderFile(dirPath, fileDescriptor);
+				renderedFile = renderFile(dirPath, fileDescriptor);
+				html += renderedFile;
 				++imageCount;
 			}
 		} else if (fileDescriptor.type == 'directory') {
-			html += renderDirectory(dirPath, fileDescriptor);
+			renderedFile = renderDirectory(dirPath, fileDescriptor);
+			html += renderedFile;
+		}
+		if (!renderedFile) {
+			//debugger;
 		}
 	});
+console.log("html: " + html);
 	return html;
 }
 
@@ -156,7 +172,7 @@ function isAudio(localFilePath) {
 </script>
 <div id="menubar"></div>
 
-<textarea id="locations" cols="120" onblur="updateURL()">/media/sarnobat/e/new/</textarea>
+<textarea id="locations" cols=120 onblur="updateURL()">/media/sarnobat/e/new/</textarea>
 <br>
 <br>
 <div id="items"></div>
