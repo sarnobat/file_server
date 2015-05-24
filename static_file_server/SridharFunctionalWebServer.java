@@ -51,6 +51,10 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+// Make everything static
+// TODO: Make things private, not protected
+// Try and make field variables constants by deprecating them
+
 public class SridharFunctionalWebServer //extends SridharFunctionalWebServer 
 {
     private static final int PORT_NUMBER = 8080;
@@ -370,7 +374,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Default strategy for creating and cleaning up temporary files.
      */
-    private class DefaultTempFileManagerFactory implements TempFileManagerFactory {
+    private static class DefaultTempFileManagerFactory implements TempFileManagerFactory {
 
         @Override
         public TempFileManager create() {
@@ -1442,7 +1446,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Pluggable strategy for creating and cleaning up temporary files.
      */
-    private TempFileManagerFactory tempFileManagerFactory;
+    @Deprecated private TempFileManagerFactory tempFileManagerFactory;
 
     /**
      * Constructs an HTTP server on given port.
@@ -1587,21 +1591,21 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Create a response with unknown length (using HTTP 1.1 chunking).
      */
-    public Response superNewChunkedResponse(IStatus status, String mimeType, InputStream data) {
+    public static Response superNewChunkedResponse(IStatus status, String mimeType, InputStream data) {
         return new Response(status, mimeType, data, -1);
     }
 
     /**
      * Create a response with known length.
      */
-    public Response newFixedLengthResponse(IStatus status, String mimeType, InputStream data, long totalBytes) {
+    public static Response newFixedLengthResponse(IStatus status, String mimeType, InputStream data, long totalBytes) {
         return new Response(status, mimeType, data, totalBytes);
     }
 
     /**
      * Create a text response with known length.
      */
-    public Response superNewFixedLengthResponse(IStatus status, String mimeType, String txt) {
+    public static Response superNewFixedLengthResponse(IStatus status, String mimeType, String txt) {
         if (txt == null) {
             return newFixedLengthResponse(status, mimeType, new ByteArrayInputStream(new byte[0]), 0);
         } else {
@@ -1619,7 +1623,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Create a text response with known length.
      */
-    public Response newFixedLengthResponse(String msg) {
+    public static Response newFixedLengthResponse(String msg) {
         return newFixedLengthResponse(Response.Status.OK, SridharFunctionalWebServer.MIME_HTML, msg);
     }
 
@@ -1807,7 +1811,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      */
     private static final String LICENCE = "";
 
-    private static Map<String, WebServerPlugin> mimeTypeHandlers = new HashMap<String, WebServerPlugin>();
+    // TODO: make this immutable
+    private static final Map<String, WebServerPlugin> mimeTypeHandlers = new HashMap<String, WebServerPlugin>();
 
     /**
      * Starts as a standalone file server and waits for Enter.
@@ -1877,7 +1882,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                     }
                     System.out.println(").");
                 }
-                registerPluginForMimeType(indexFiles, mime, info.getWebServerPlugin(mime), options);
+                registerPluginForMimeType(indexFiles, mime, info.getWebServerPlugin(mime), options, mimeTypeHandlers);
             }
         }
 
@@ -1919,7 +1924,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
     }
     
-    protected static void registerPluginForMimeType(String[] indexFiles, String mimeType, WebServerPlugin plugin, Map<String, String> commandLineOptions) {
+    protected static void registerPluginForMimeType(String[] indexFiles, String mimeType, WebServerPlugin plugin, Map<String, String> commandLineOptions,Map<String, WebServerPlugin> mimeTypeHandlers) {
         if (mimeType == null || plugin == null) {
             return;
         }
@@ -1934,7 +1939,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
             }
             SridharFunctionalWebServer.INDEX_FILE_NAMES.addAll(Arrays.asList(indexFiles));
         }
-        SridharFunctionalWebServer.mimeTypeHandlers.put(mimeType, plugin);
+        mimeTypeHandlers.put(mimeType, plugin);
         plugin.initialize(commandLineOptions);
     }
 
@@ -1960,13 +1965,13 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         init();
     }
 
-    private boolean canServeUri(String uri, File homeDir) {
+    private static boolean canServeUri(String uri, File homeDir,Map<String, WebServerPlugin> mimeTypeHandlers) {
         boolean canServeUri;
         File f = new File(homeDir, uri);
         canServeUri = f.exists();
         if (!canServeUri) {
             String mimeTypeForFile = getMimeTypeForFile(uri);
-            WebServerPlugin plugin = SridharFunctionalWebServer.mimeTypeHandlers.get(mimeTypeForFile);
+            WebServerPlugin plugin = mimeTypeHandlers.get(mimeTypeForFile);
             if (plugin != null) {
                 canServeUri = plugin.canServeUri(uri, homeDir);
             }
@@ -1978,7 +1983,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * URL-encodes everything between "/"-characters. Encodes spaces as '%20'
      * instead of '+'.
      */
-    private String encodeUri(String uri) {
+    private static String encodeUri(String uri) {
         String newUri = "";
         StringTokenizer st = new StringTokenizer(uri, "/ ", true);
         while (st.hasMoreTokens()) {
@@ -1997,7 +2002,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return newUri;
     }
 
-    private String findIndexFileInDirectory(File directory) {
+    private static String findIndexFileInDirectory(File directory) {
         for (String fileName : SridharFunctionalWebServer.INDEX_FILE_NAMES) {
             File indexFile = new File(directory, fileName);
             if (indexFile.isFile()) {
@@ -2007,16 +2012,16 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return null;
     }
 
-    protected Response getForbiddenResponse(String s) {
+    protected static Response getForbiddenResponse(String s) {
         return newFixedLengthResponse(Response.Status.FORBIDDEN, SridharFunctionalWebServer.MIME_PLAINTEXT, "FORBIDDEN: " + s);
     }
 
-    protected Response getInternalErrorResponse(String s) {
+    protected static Response getInternalErrorResponse(String s) {
         return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, SridharFunctionalWebServer.MIME_PLAINTEXT, "INTERNAL ERROR: " + s);
     }
 
     // Get MIME type from file name extension, if possible
-    private String getMimeTypeForFile(String uri) {
+    private static String getMimeTypeForFile(String uri) {
         int dot = uri.lastIndexOf('.');
         String mime = null;
         if (dot >= 0) {
@@ -2025,7 +2030,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return mime == null ? SridharFunctionalWebServer.MIME_DEFAULT_BINARY : mime;
     }
 
-    protected Response getNotFoundResponse() {
+    protected static Response getNotFoundResponse() {
         return newFixedLengthResponse(Response.Status.NOT_FOUND, SridharFunctionalWebServer.MIME_PLAINTEXT, "Error 404, file not found.");
     }
 
@@ -2035,7 +2040,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     public void init() {
     }
 
-    protected String listDirectory(String uri, File f) {
+    protected static String listDirectory(String uri, File f) {
         String heading = "Directory " + uri;
         StringBuilder msg =
                 new StringBuilder("<html><head><title>" + heading + "</title><style><!--\n" + "span.dirname { font-weight: bold; }\n" + "span.filesize { font-size: 75%; }\n"
@@ -2104,7 +2109,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return msg.toString();
     }
 
-    public Response newFixedLengthResponse(IStatus status, String mimeType, String message) {
+    public static Response newFixedLengthResponse(IStatus status, String mimeType, String message) {
         Response response = superNewFixedLengthResponse(status, mimeType, message);
         response.addHeader("Accept-Ranges", "bytes");
         return response;
@@ -2126,7 +2131,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         File homeDir = null;
         for (int i = 0; !canServeUri && i < this.rootDirs.size(); i++) {
             homeDir = this.rootDirs.get(i);
-            canServeUri = canServeUri(uri, homeDir);
+            canServeUri = canServeUri(uri, homeDir, mimeTypeHandlers);
         }
         if (!canServeUri) {
             return getNotFoundResponse();
@@ -2160,7 +2165,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
 
         String mimeTypeForFile = getMimeTypeForFile(uri);
-        WebServerPlugin plugin = SridharFunctionalWebServer.mimeTypeHandlers.get(mimeTypeForFile);
+        WebServerPlugin plugin = mimeTypeHandlers.get(mimeTypeForFile);
         Response response = null;
         if (plugin != null && plugin.canServeUri(uri, homeDir)) {
             response = plugin.serveFile(uri, headers, session, f, mimeTypeForFile);
