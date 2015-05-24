@@ -57,7 +57,9 @@ import javax.net.ssl.TrustManagerFactory;
 
 public class SridharFunctionalWebServer //extends SridharFunctionalWebServer 
 {
-    private static final int PORT_NUMBER = 8080;
+    private static final String HOST = "localhost";
+
+	private static final int PORT_NUMBER = 8080;
 
 	/**
      * Pluggable strategy for asynchronously executing requests.
@@ -423,7 +425,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
             this.tempFileManager = tempFileManager;
             this.inputStream = new PushbackInputStream(inputStream, HTTPSession.BUFSIZE);
             this.outputStream = outputStream;
-            this.remoteIp = inetAddress.isLoopbackAddress() || inetAddress.isAnyLocalAddress() ? "localhost" : inetAddress.getHostAddress().toString();
+            this.remoteIp = inetAddress.isLoopbackAddress() || inetAddress.isAnyLocalAddress() ? HOST : inetAddress.getHostAddress().toString();
             this.headers = new HashMap<String, String>();
             this.server = server;
         }
@@ -1821,13 +1823,13 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * Starts as a standalone file server and waits for Enter.
      */
     public static void main(String[] args) {
+    	Map<String, String> options = new HashMap<String, String>();
         // Defaults
         int port = PORT_NUMBER;
 
-        String host = "localhost";
+        String host = HOST;
         List<File> rootDirs = new ArrayList<File>();
         boolean quiet = false;
-        Map<String, String> options = new HashMap<String, String>();
 
         // Parse command-line, with short and long versions of the options.
         for (int i = 0; i < args.length; ++i) {
@@ -1858,20 +1860,9 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         options.put("host", host);
         options.put("port", "" + port);
         options.put("quiet", String.valueOf(quiet));
-        StringBuilder sb = new StringBuilder();
-        for (File dir : rootDirs) {
-            if (sb.length() > 0) {
-                sb.append(":");
-            }
-            try {
-                sb.append(dir.getCanonicalPath());
-            } catch (IOException ignored) {
-            }
-        }
-        options.put("home", sb.toString());
+        options.put("home", serializeFileList(rootDirs));
 
-        ServiceLoader<WebServerPluginInfo> serviceLoader = ServiceLoader.load(WebServerPluginInfo.class);
-        for (WebServerPluginInfo info : serviceLoader) {
+        for (WebServerPluginInfo info : ServiceLoader.load(WebServerPluginInfo.class)) {
             String[] mimeTypes = info.getMimeTypes();
             for (String mime : mimeTypes) {
                 String[] indexFiles = info.getIndexFilesForMimeType(mime);
@@ -1891,6 +1882,21 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
 
         ServerRunner.executeInstance(new SridharFunctionalWebServer(host, port, rootDirs, quiet));
     }
+
+	private static String serializeFileList(List<File> rootDirs) {
+		StringBuilder sb = new StringBuilder();
+        for (File dir : rootDirs) {
+            if (sb.length() > 0) {
+                sb.append(":");
+            }
+            try {
+                sb.append(dir.getCanonicalPath());
+            } catch (IOException ignored) {
+            }
+        }
+        String string = sb.toString();
+		return string;
+	}
 
     private static class ServerRunner {
 
@@ -1928,7 +1934,10 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
     }
     
-    private static void registerPluginForMimeType(String[] indexFiles, String mimeType, WebServerPlugin plugin, Map<String, String> commandLineOptions,Map<String, WebServerPlugin> mimeTypeHandlers) {
+	private static void registerPluginForMimeType(String[] indexFiles,
+			String mimeType, WebServerPlugin plugin,
+			Map<String, String> commandLineOptions,
+			Map<String, WebServerPlugin> mimeTypeHandlers) {
         if (mimeType == null || plugin == null) {
             return;
         }
@@ -1967,20 +1976,6 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         this.rootDirs = new ArrayList<File>(wwwroots);
 
         init();
-    }
-
-    private static boolean canServeUri(String uri, File homeDir,Map<String, WebServerPlugin> mimeTypeHandlers) {
-        boolean canServeUri;
-        File f = new File(homeDir, uri);
-        canServeUri = f.exists();
-        if (!canServeUri) {
-            String mimeTypeForFile = getMimeTypeForFile(uri);
-            WebServerPlugin plugin = mimeTypeHandlers.get(mimeTypeForFile);
-            if (plugin != null) {
-                canServeUri = plugin.canServeUri(uri, homeDir);
-            }
-        }
-        return canServeUri;
     }
 
     /**
@@ -2184,34 +2179,21 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return response != null ? response : getNotFoundResponse();
     }
 
-    private Response serve(IHTTPSession session) {
-        Map<String, String> header = session.getHeaders();
-        Map<String, String> parms = session.getParms();
-        String uri = session.getUri();
 
-        if (!this.quiet) {
-            System.out.println(session.getMethod() + " '" + uri + "' ");
-
-            Iterator<String> e = header.keySet().iterator();
-            while (e.hasNext()) {
-                String value = e.next();
-                System.out.println("  HDR: '" + value + "' = '" + header.get(value) + "'");
-            }
-            e = parms.keySet().iterator();
-            while (e.hasNext()) {
-                String value = e.next();
-                System.out.println("  PRM: '" + value + "' = '" + parms.get(value) + "'");
+    private static boolean canServeUri(String uri, File homeDir,Map<String, WebServerPlugin> mimeTypeHandlers) {
+        boolean canServeUri;
+        File f = new File(homeDir, uri);
+        canServeUri = f.exists();
+        if (!canServeUri) {
+            String mimeTypeForFile = getMimeTypeForFile(uri);
+            WebServerPlugin plugin = mimeTypeHandlers.get(mimeTypeForFile);
+            if (plugin != null) {
+                canServeUri = plugin.canServeUri(uri, homeDir);
             }
         }
-
-        for (File homeDir : this.rootDirs) {
-            // Make sure we won't die of an exception later
-            if (!homeDir.isDirectory()) {
-                return getInternalErrorResponse("given path is not a directory (" + homeDir + ").");
-            }
-        }
-        return respond(Collections.unmodifiableMap(header), session, uri);
+        return canServeUri;
     }
+
 
     /**
      * Serves file from homeDir and its' subdirectories (only). Uses only URI,
@@ -2314,6 +2296,34 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
 
         return res;
+    }
+    private Response serve(IHTTPSession session) {
+        Map<String, String> header = session.getHeaders();
+        Map<String, String> parms = session.getParms();
+        String uri = session.getUri();
+
+        if (!this.quiet) {
+            System.out.println(session.getMethod() + " '" + uri + "' ");
+
+            Iterator<String> e = header.keySet().iterator();
+            while (e.hasNext()) {
+                String value = e.next();
+                System.out.println("  HDR: '" + value + "' = '" + header.get(value) + "'");
+            }
+            e = parms.keySet().iterator();
+            while (e.hasNext()) {
+                String value = e.next();
+                System.out.println("  PRM: '" + value + "' = '" + parms.get(value) + "'");
+            }
+        }
+
+        for (File homeDir : this.rootDirs) {
+            // Make sure we won't die of an exception later
+            if (!homeDir.isDirectory()) {
+                return getInternalErrorResponse("given path is not a directory (" + homeDir + ").");
+            }
+        }
+        return respond(Collections.unmodifiableMap(header), session, uri);
     }
 
     private static Response newFixedFileResponse(File file, String mime) throws FileNotFoundException {
