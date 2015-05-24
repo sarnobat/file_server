@@ -62,7 +62,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
 	/**
      * Pluggable strategy for asynchronously executing requests.
      */
-    public interface AsyncRunner {
+    private interface AsyncRunner {
 
         void closeAll();
 
@@ -74,7 +74,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * The runnable that will be used for every new client connection.
      */
-    public static class ClientHandler implements Runnable {
+    private static class ClientHandler implements Runnable {
 
         private final InputStream inputStream;
 
@@ -126,7 +126,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
     }
 
-    public static class Cookie {
+    private static class Cookie {
 
         public static String getHTTPTime(int days) {
             Calendar calendar = Calendar.getInstance();
@@ -167,7 +167,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * 
      * @author LordFokas
      */
-    public static class CookieHandler implements Iterable<String> {
+    private static class CookieHandler implements Iterable<String> {
 
         private final HashMap<String, String> cookies = new HashMap<String, String>();
 
@@ -255,7 +255,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * number. The name is useful when profiling the application.
      * </p>
      */
-    public static class DefaultAsyncRunner implements AsyncRunner {
+    private static class DefaultAsyncRunner implements AsyncRunner {
 
         private long requestCount;
 
@@ -300,7 +300,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * the directory specified.
      * </p>
      */
-    public static class DefaultTempFile implements TempFile {
+    private static class DefaultTempFile implements TempFile {
 
         private final File file;
 
@@ -340,7 +340,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * <code>clear()</code> is invoked at the end of processing a request).
      * </p>
      */
-    public static class DefaultTempFileManager implements TempFileManager {
+    private static class DefaultTempFileManager implements TempFileManager {
 
         private final String tmpdir;
 
@@ -382,7 +382,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
     }
 
-    protected static class HTTPSession implements IHTTPSession {
+    private static class HTTPSession implements IHTTPSession {
 
         public static final int BUFSIZE = 8192;
 
@@ -681,11 +681,11 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                 // exception up the call stack.
                 throw ste;
             } catch (IOException ioe) {
-                Response r = server.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, SridharFunctionalWebServer.MIME_PLAINTEXT, "SERVER INTERNAL ERROR: IOException: " + ioe.getMessage());
+                Response r = newFixedLengthResponse(Response.Status.INTERNAL_ERROR, SridharFunctionalWebServer.MIME_PLAINTEXT, "SERVER INTERNAL ERROR: IOException: " + ioe.getMessage());
                 r.send(this.outputStream);
                 safeClose(this.outputStream);
             } catch (ResponseException re) {
-                Response r = server.newFixedLengthResponse(re.getStatus(), SridharFunctionalWebServer.MIME_PLAINTEXT, re.getMessage());
+                Response r = newFixedLengthResponse(re.getStatus(), SridharFunctionalWebServer.MIME_PLAINTEXT, re.getMessage());
                 r.send(this.outputStream);
                 safeClose(this.outputStream);
             } finally {
@@ -921,7 +921,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * Handles one session, i.e. parses the HTTP request and returns the
      * response.
      */
-    public static interface IHTTPSession {
+    private static interface IHTTPSession {
 
         void execute() throws IOException;
 
@@ -955,7 +955,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * HTTP Request methods, with the ability to decode a <code>String</code>
      * back to its enum value.
      */
-    public static enum Method {
+    private static enum Method {
         GET,
         PUT,
         POST,
@@ -972,7 +972,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
             return null;
         }
     }
-    public interface IStatus {
+    private interface IStatus {
 
         String getDescription();
 
@@ -982,7 +982,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * HTTP response. Return one of these from serve().
      */
-    public static class Response {
+    private static class Response {
 
         /**
          * Some HTTP response status codes
@@ -1229,7 +1229,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
     }
 
-    public static final class ResponseException extends Exception {
+    private static final class ResponseException extends Exception {
 
         private static final long serialVersionUID = 6569838532917408380L;
 
@@ -1253,7 +1253,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * The runnable that will be used for the main listening thread.
      */
-    public static class ServerRunnable implements Runnable {
+    private static class ServerRunnable implements Runnable {
 
         private final int timeout;
         private final SridharFunctionalWebServer server;
@@ -1297,7 +1297,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * cleaning themselves up when no longer needed.
      * </p>
      */
-    public static interface TempFile {
+    private static interface TempFile {
 
         void delete() throws Exception;
 
@@ -1314,7 +1314,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * and cleanup temporary files created as a result of handling the request.
      * </p>
      */
-    public static interface TempFileManager {
+    private static interface TempFileManager {
 
         void clear();
 
@@ -1324,7 +1324,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Factory to create temp file managers.
      */
-    public static interface TempFileManagerFactory {
+    private static interface TempFileManagerFactory {
 
         TempFileManager create();
     }
@@ -1362,7 +1362,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * array of loaded KeyManagers. These objects must properly
      * loaded/initialized by the caller.
      */
-    public static SSLServerSocketFactory makeSSLSocketFactory(KeyStore loadedKeyStore, KeyManager[] keyManagers) throws IOException {
+    private static SSLServerSocketFactory makeSSLSocketFactory(KeyStore loadedKeyStore, KeyManager[] keyManagers) throws IOException {
         SSLServerSocketFactory res = null;
         try {
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -1381,7 +1381,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * loaded KeyManagerFactory. These objects must properly loaded/initialized
      * by the caller.
      */
-    public static SSLServerSocketFactory makeSSLSocketFactory(KeyStore loadedKeyStore, KeyManagerFactory loadedKeyFactory) throws IOException {
+    private static SSLServerSocketFactory makeSSLSocketFactory(KeyStore loadedKeyStore, KeyManagerFactory loadedKeyFactory) throws IOException {
         SSLServerSocketFactory res = null;
         try {
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -1399,7 +1399,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * Creates an SSLSocketFactory for HTTPS. Pass a KeyStore resource with your
      * certificate and passphrase
      */
-    public static SSLServerSocketFactory makeSSLSocketFactory(String keyAndTrustStoreClasspathPath, char[] passphrase) throws IOException {
+    private static SSLServerSocketFactory makeSSLSocketFactory(String keyAndTrustStoreClasspathPath, char[] passphrase) throws IOException {
         SSLServerSocketFactory res = null;
         try {
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -1451,7 +1451,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Constructs an HTTP server on given port.
      */
-    public SridharFunctionalWebServer(int port) {
+    private SridharFunctionalWebServer(int port) {
         this(null, port);
     }
 
@@ -1466,9 +1466,10 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Constructs an HTTP server on given hostname and port.
      */
-    public SridharFunctionalWebServer(String hostname, int port) {
+    private SridharFunctionalWebServer(String hostname, int port) {
         this.hostname = hostname;
         this.myPort = port;
+        // TODO: Inject this
         setTempFileManagerFactory(new DefaultTempFileManagerFactory());
         setAsyncRunner(new DefaultAsyncRunner());
         this.quiet = true;
@@ -1477,7 +1478,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Forcibly closes all connections that are open.
      */
-    public synchronized void closeAllConnections() {
+    private synchronized void closeAllConnections() {
         stop();
     }
 
@@ -1491,7 +1492,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      *            the input stream
      * @return the client handler
      */
-    protected static ClientHandler createClientHandler(final Socket finalAccept, final InputStream inputStream, final TempFileManagerFactory tempFileManagerFactory, AsyncRunner asyncRunner, SridharFunctionalWebServer server) {
+    private static ClientHandler createClientHandler(final Socket finalAccept, final InputStream inputStream, final TempFileManagerFactory tempFileManagerFactory, AsyncRunner asyncRunner, SridharFunctionalWebServer server) {
         return new ClientHandler(inputStream, finalAccept, tempFileManagerFactory, asyncRunner, server);
     }
 
@@ -1503,7 +1504,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      *            the socet timeout to use.
      * @return the server runnable.
      */
-    protected ServerRunnable createServerRunnable(final int timeout,SridharFunctionalWebServer server,ServerSocket myServerSocket,TempFileManagerFactory tempFileManagerFactory) {
+    private ServerRunnable createServerRunnable(final int timeout,SridharFunctionalWebServer server,ServerSocket myServerSocket,TempFileManagerFactory tempFileManagerFactory) {
         return new ServerRunnable(timeout,server,asyncRunner, myServerSocket,tempFileManagerFactory);
     }
 
@@ -1518,8 +1519,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @return a map of <code>String</code> (parameter name) to
      *         <code>List&lt;String&gt;</code> (a list of the values supplied).
      */
-    protected Map<String, List<String>> decodeParameters(Map<String, String> parms) {
-        return this.decodeParameters(parms.get(SridharFunctionalWebServer.QUERY_STRING_PARAMETER));
+    private static Map<String, List<String>> decodeParameters(Map<String, String> parms) {
+        return decodeParameters(parms.get(SridharFunctionalWebServer.QUERY_STRING_PARAMETER));
     }
 
     // -------------------------------------------------------------------------------
@@ -1535,7 +1536,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @return a map of <code>String</code> (parameter name) to
      *         <code>List&lt;String&gt;</code> (a list of the values supplied).
      */
-    protected Map<String, List<String>> decodeParameters(String queryString) {
+    private static Map<String, List<String>> decodeParameters(String queryString) {
         Map<String, List<String>> parms = new HashMap<String, List<String>>();
         if (queryString != null) {
             StringTokenizer st = new StringTokenizer(queryString, "&");
@@ -1563,7 +1564,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @return expanded form of the input, for example "foo%20bar" becomes
      *         "foo bar"
      */
-    protected static String decodePercent(String str) {
+    private static String decodePercent(String str) {
         String decoded = null;
         try {
             decoded = URLDecoder.decode(str, "UTF8");
@@ -1573,39 +1574,39 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return decoded;
     }
 
-    public final int getListeningPort() {
+    private final int getListeningPort() {
         return this.myServerSocket == null ? -1 : this.myServerSocket.getLocalPort();
     }
 
-    public final boolean isAlive() {
+    private final boolean isAlive() {
         return wasStarted() && !this.myServerSocket.isClosed() && this.myThread.isAlive();
     }
 
     /**
      * Call before start() to serve over HTTPS instead of HTTP
      */
-    public void makeSecure(SSLServerSocketFactory sslServerSocketFactory) {
+    private void makeSecure(SSLServerSocketFactory sslServerSocketFactory) {
         this.sslServerSocketFactory = sslServerSocketFactory;
     }
 
     /**
      * Create a response with unknown length (using HTTP 1.1 chunking).
      */
-    public static Response superNewChunkedResponse(IStatus status, String mimeType, InputStream data) {
+    private static Response superNewChunkedResponse(IStatus status, String mimeType, InputStream data) {
         return new Response(status, mimeType, data, -1);
     }
 
     /**
      * Create a response with known length.
      */
-    public static Response newFixedLengthResponse(IStatus status, String mimeType, InputStream data, long totalBytes) {
+    private static Response newFixedLengthResponse(IStatus status, String mimeType, InputStream data, long totalBytes) {
         return new Response(status, mimeType, data, totalBytes);
     }
 
     /**
      * Create a text response with known length.
      */
-    public static Response superNewFixedLengthResponse(IStatus status, String mimeType, String txt) {
+    private static Response superNewFixedLengthResponse(IStatus status, String mimeType, String txt) {
         if (txt == null) {
             return newFixedLengthResponse(status, mimeType, new ByteArrayInputStream(new byte[0]), 0);
         } else {
@@ -1623,7 +1624,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Create a text response with known length.
      */
-    public static Response newFixedLengthResponse(String msg) {
+    private static Response newFixedLengthResponse(String msg) {
         return newFixedLengthResponse(Response.Status.OK, SridharFunctionalWebServer.MIME_HTML, msg);
     }
 
@@ -1637,7 +1638,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      *            The HTTP session
      * @return HTTP response, see class Response for details
      */
-    public Response superServe(IHTTPSession session) {
+    @Deprecated
+    private Response superServe(IHTTPSession session) {
         Map<String, String> files = new HashMap<String, String>();
         Method method = session.getMethod();
         if (Method.PUT.equals(method) || Method.POST.equals(method)) {
@@ -1674,7 +1676,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @return HTTP response, see class Response for details
      */
     @Deprecated
-    public Response serve(String uri, Method method, Map<String, String> headers, Map<String, String> parms, Map<String, String> files) {
+    private Response serve(String uri, Method method, Map<String, String> headers, Map<String, String> parms, Map<String, String> files) {
         return newFixedLengthResponse(Response.Status.NOT_FOUND, SridharFunctionalWebServer.MIME_PLAINTEXT, "Not Found");
     }
 
@@ -1684,7 +1686,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @param asyncRunner
      *            new strategy for handling threads.
      */
-    public void setAsyncRunner(AsyncRunner asyncRunner) {
+    private void setAsyncRunner(AsyncRunner asyncRunner) {
         this.asyncRunner = asyncRunner;
     }
 
@@ -1694,7 +1696,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @param tempFileManagerFactory
      *            new strategy for handling temp files.
      */
-    public void setTempFileManagerFactory(TempFileManagerFactory tempFileManagerFactory) {
+    @Deprecated // Mutable state
+    private void setTempFileManagerFactory(TempFileManagerFactory tempFileManagerFactory) {
         this.tempFileManagerFactory = tempFileManagerFactory;
     }
 
@@ -1704,7 +1707,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @throws IOException
      *             if the socket is in use.
      */
-    public void start() throws IOException {
+    private void start() throws IOException {
         start(SridharFunctionalWebServer.SOCKET_READ_TIMEOUT);
     }
 
@@ -1716,7 +1719,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @throws IOException
      *             if the socket is in use.
      */
-    public void start(final int timeout) throws IOException {
+    private void start(final int timeout) throws IOException {
         if (this.sslServerSocketFactory != null) {
             SSLServerSocket ss = (SSLServerSocket) this.sslServerSocketFactory.createServerSocket();
             ss.setNeedClientAuth(false);
@@ -1737,7 +1740,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     /**
      * Stop the server.
      */
-    public void stop() {
+    private void stop() {
         try {
             safeClose(this.myServerSocket);
             this.asyncRunner.closeAll();
@@ -1749,7 +1752,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
     }
 
-    public final boolean wasStarted() {
+    private final boolean wasStarted() {
         return this.myServerSocket != null && this.myThread != null;
     }
 
@@ -1915,6 +1918,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
             System.out.println("Server stopped.\n");
         }
 
+        @Deprecated // Unused
         public static <T extends SridharFunctionalWebServer> void run(Class<T> serverClass) {
             try {
                 executeInstance(serverClass.newInstance());
@@ -1924,7 +1928,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
     }
     
-    protected static void registerPluginForMimeType(String[] indexFiles, String mimeType, WebServerPlugin plugin, Map<String, String> commandLineOptions,Map<String, WebServerPlugin> mimeTypeHandlers) {
+    private static void registerPluginForMimeType(String[] indexFiles, String mimeType, WebServerPlugin plugin, Map<String, String> commandLineOptions,Map<String, WebServerPlugin> mimeTypeHandlers) {
         if (mimeType == null || plugin == null) {
             return;
         }
@@ -1948,7 +1952,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     protected List<File> rootDirs;
 
  
-    public SridharFunctionalWebServer(String host, int port, File wwwroot, boolean quiet) {
+    private SridharFunctionalWebServer(String host, int port, File wwwroot, boolean quiet) {
         this(host, port);
         //this.quiet = quiet;
         this.rootDirs = new ArrayList<File>();
@@ -1957,7 +1961,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         init();
     }
 
-    public SridharFunctionalWebServer(String host, int port, List<File> wwwroots, boolean quiet) {
+    private SridharFunctionalWebServer(String host, int port, List<File> wwwroots, boolean quiet) {
         this(host, port);
         //this.quiet = quiet;
         this.rootDirs = new ArrayList<File>(wwwroots);
@@ -2012,11 +2016,11 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return null;
     }
 
-    protected static Response getForbiddenResponse(String s) {
+    private static Response getForbiddenResponse(String s) {
         return newFixedLengthResponse(Response.Status.FORBIDDEN, SridharFunctionalWebServer.MIME_PLAINTEXT, "FORBIDDEN: " + s);
     }
 
-    protected static Response getInternalErrorResponse(String s) {
+    private static Response getInternalErrorResponse(String s) {
         return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, SridharFunctionalWebServer.MIME_PLAINTEXT, "INTERNAL ERROR: " + s);
     }
 
@@ -2030,17 +2034,18 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return mime == null ? SridharFunctionalWebServer.MIME_DEFAULT_BINARY : mime;
     }
 
-    protected static Response getNotFoundResponse() {
+    private static Response getNotFoundResponse() {
         return newFixedLengthResponse(Response.Status.NOT_FOUND, SridharFunctionalWebServer.MIME_PLAINTEXT, "Error 404, file not found.");
     }
 
     /**
      * Used to initialize and customize the server.
      */
-    public void init() {
+    @Deprecated // Does nothing
+    private final void init() {
     }
 
-    protected static String listDirectory(String uri, File f) {
+    private static String listDirectory(String uri, File f) {
         String heading = "Directory " + uri;
         StringBuilder msg =
                 new StringBuilder("<html><head><title>" + heading + "</title><style><!--\n" + "span.dirname { font-weight: bold; }\n" + "span.filesize { font-size: 75%; }\n"
@@ -2109,7 +2114,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return msg.toString();
     }
 
-    public static Response newFixedLengthResponse(IStatus status, String mimeType, String message) {
+    private static Response newFixedLengthResponse(IStatus status, String mimeType, String message) {
         Response response = superNewFixedLengthResponse(status, mimeType, message);
         response.addHeader("Accept-Ranges", "bytes");
         return response;
@@ -2179,7 +2184,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return response != null ? response : getNotFoundResponse();
     }
 
-    public Response serve(IHTTPSession session) {
+    private Response serve(IHTTPSession session) {
         Map<String, String> header = session.getHeaders();
         Map<String, String> parms = session.getParms();
         String uri = session.getUri();
@@ -2212,7 +2217,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * Serves file from homeDir and its' subdirectories (only). Uses only URI,
      * ignores all headers and HTTP parameters.
      */
-    Response serveFile(String uri, Map<String, String> header, File file, String mime) {
+    private static Response serveFile(String uri, Map<String, String> header, File file, String mime) {
         Response res;
         try {
             // Calculate etag
@@ -2311,14 +2316,14 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return res;
     }
 
-    private Response newFixedFileResponse(File file, String mime) throws FileNotFoundException {
+    private static Response newFixedFileResponse(File file, String mime) throws FileNotFoundException {
         Response res;
         res = newFixedLengthResponse(Response.Status.OK, mime, new FileInputStream(file), (int) file.length());
         res.addHeader("Accept-Ranges", "bytes");
         return res;
     }
     
-    public static interface WebServerPlugin {
+    private static interface WebServerPlugin {
 
         boolean canServeUri(String uri, File rootDir);
 
@@ -2327,7 +2332,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         Response serveFile(String uri, Map<String, String> headers, IHTTPSession session, File file, String mimeType);
     }
     
-    public static class InternalRewrite extends Response {
+    private static class InternalRewrite extends Response {
 
         private final String uri;
 
@@ -2347,7 +2352,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
             return this.uri;
         }
     }
-    public static interface WebServerPluginInfo {
+    private static interface WebServerPluginInfo {
 
         String[] getIndexFilesForMimeType(String mime);
 
