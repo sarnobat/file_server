@@ -51,6 +51,8 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import com.google.common.collect.ImmutableMap;
+
 // Make everything static
 // TODO: Make things private, not protected
 // Try and make field variables constants by deprecating them
@@ -84,13 +86,15 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         private final TempFileManagerFactory tempFileManagerFactory;
         private final AsyncRunner asyncRunner;
         private final SridharFunctionalWebServer server;
+        private final Map mimeTypeHandlers;
         
-        private ClientHandler(InputStream inputStream, Socket acceptSocket, TempFileManagerFactory tempFileManagerFactory, AsyncRunner asyncRunner,SridharFunctionalWebServer server) {
+        private ClientHandler(InputStream inputStream, Socket acceptSocket, TempFileManagerFactory tempFileManagerFactory, AsyncRunner asyncRunner,SridharFunctionalWebServer server, Map mimeTypeHandlers) {
             this.inputStream = inputStream;
             this.acceptSocket = acceptSocket;
             this.tempFileManagerFactory = tempFileManagerFactory;
             this.asyncRunner = asyncRunner;
             this.server = server;
+            this.mimeTypeHandlers = mimeTypeHandlers;
         }
 
         public void close() {
@@ -106,7 +110,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                 TempFileManager tempFileManager = this.tempFileManagerFactory.create();
                 HTTPSession session = new HTTPSession(tempFileManager, this.inputStream, outputStream, this.acceptSocket.getInetAddress(), server);
                 while (!this.acceptSocket.isClosed()) {
-                    session.execute();
+                    session.execute(mimeTypeHandlers);
                 }
             } catch (Exception e) {
                 // When the socket is closed by the client,
@@ -599,7 +603,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
 
         @Override
-        public void execute() throws IOException {
+        public void execute(Map mimeTypeHandlers) throws IOException {
             try {
                 // Read the first 8192 bytes.
                 // The full header should fit in here.
@@ -666,7 +670,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                 this.cookies = new CookieHandler(this.headers);
 
                 // Ok, now do the serve()
-                Response r = server.serve(this);
+                Response r = server.serve(this, mimeTypeHandlers);
                 if (r == null) {
                     throw new ResponseException(Response.Status.INTERNAL_ERROR, "SERVER INTERNAL ERROR: Serve() returned a null response.");
                 } else {
@@ -925,7 +929,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      */
     private static interface IHTTPSession {
 
-        void execute() throws IOException;
+        void execute(Map mimeTypeHandlers) throws IOException;
 
         CookieHandler getCookies();
 
@@ -1262,12 +1266,15 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         private final AsyncRunner asyncRunner;
         private final ServerSocket myServerSocket;
         private final TempFileManagerFactory tempFileManagerFactory;
-        private ServerRunnable(int timeout, SridharFunctionalWebServer server, AsyncRunner asyncRunner, ServerSocket myServerSocket, TempFileManagerFactory tempFileManagerFactory) {
+        private final Map mimeTypeHandlers;
+        
+        private ServerRunnable(int timeout, SridharFunctionalWebServer server, AsyncRunner asyncRunner, ServerSocket myServerSocket, TempFileManagerFactory tempFileManagerFactory, Map mimeTypeHandlers) {
             this.timeout = timeout;
             this.server = server;
             this.asyncRunner = asyncRunner;
             this.myServerSocket = myServerSocket;
             this.tempFileManagerFactory = tempFileManagerFactory;
+            this.mimeTypeHandlers = mimeTypeHandlers;
         }
 
         @Override
@@ -1283,7 +1290,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                         finalAccept.setSoTimeout(this.timeout);
                     }
                     final InputStream inputStream = finalAccept.getInputStream();
-                    this.asyncRunner.exec(SridharFunctionalWebServer.createClientHandler(finalAccept, inputStream, tempFileManagerFactory,asyncRunner,server));
+                    this.asyncRunner.exec(SridharFunctionalWebServer.createClientHandler(finalAccept, inputStream, tempFileManagerFactory,asyncRunner,server, mimeTypeHandlers));
                 } catch (IOException e) {
                     SridharFunctionalWebServer.LOG.log(Level.FINE, "Communication with the client broken", e);
                 }
@@ -1494,8 +1501,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      *            the input stream
      * @return the client handler
      */
-    private static ClientHandler createClientHandler(final Socket finalAccept, final InputStream inputStream, final TempFileManagerFactory tempFileManagerFactory, AsyncRunner asyncRunner, SridharFunctionalWebServer server) {
-        return new ClientHandler(inputStream, finalAccept, tempFileManagerFactory, asyncRunner, server);
+    private static ClientHandler createClientHandler(final Socket finalAccept, final InputStream inputStream, final TempFileManagerFactory tempFileManagerFactory, AsyncRunner asyncRunner, SridharFunctionalWebServer server, Map mimeTypeHandlers) {
+        return new ClientHandler(inputStream, finalAccept, tempFileManagerFactory, asyncRunner, server, mimeTypeHandlers);
     }
 
     /**
@@ -1506,8 +1513,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      *            the socet timeout to use.
      * @return the server runnable.
      */
-    private ServerRunnable createServerRunnable(final int timeout,SridharFunctionalWebServer server,ServerSocket myServerSocket,TempFileManagerFactory tempFileManagerFactory) {
-        return new ServerRunnable(timeout,server,asyncRunner, myServerSocket,tempFileManagerFactory);
+    private ServerRunnable createServerRunnable(final int timeout,SridharFunctionalWebServer server,ServerSocket myServerSocket,TempFileManagerFactory tempFileManagerFactory, Map mimeTypeHandlers) {
+        return new ServerRunnable(timeout,server,asyncRunner, myServerSocket,tempFileManagerFactory, mimeTypeHandlers);
     }
 
     /**
@@ -1709,8 +1716,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @throws IOException
      *             if the socket is in use.
      */
-    private void start() throws IOException {
-        start(SridharFunctionalWebServer.SOCKET_READ_TIMEOUT);
+    private void start(Map mimeTypeHandlers) throws IOException {
+        start(SridharFunctionalWebServer.SOCKET_READ_TIMEOUT, mimeTypeHandlers);
     }
 
     /**
@@ -1721,7 +1728,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      * @throws IOException
      *             if the socket is in use.
      */
-    private void start(final int timeout) throws IOException {
+    private void start(final int timeout, Map mimeTypeHandlers) throws IOException {
         if (this.sslServerSocketFactory != null) {
             SSLServerSocket ss = (SSLServerSocket) this.sslServerSocketFactory.createServerSocket();
             ss.setNeedClientAuth(false);
@@ -1733,7 +1740,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         InetSocketAddress endpoint = this.hostname != null ? new InetSocketAddress(this.hostname, this.myPort) : new InetSocketAddress(this.myPort);
 		this.myServerSocket.bind(endpoint);
 
-        this.myThread = new Thread(createServerRunnable(timeout,this,myServerSocket, tempFileManagerFactory));
+        this.myThread = new Thread(createServerRunnable(timeout,this,myServerSocket, tempFileManagerFactory, mimeTypeHandlers));
         this.myThread.setDaemon(true);
         this.myThread.setName("SridharFunctionalWebServer Main Listener");
         this.myThread.start();
@@ -1816,14 +1823,12 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
      */
     private static final String LICENCE = "";
 
-    // TODO: make this immutable
-    private static final Map<String, WebServerPlugin> mimeTypeHandlers = new HashMap<String, WebServerPlugin>();
-
     /**
      * Starts as a standalone file server and waits for Enter.
      */
     public static void main(String[] args) {
-    	Map<String, String> options = new HashMap<String, String>();
+    	ImmutableMap.Builder<String, WebServerPlugin> mimeTypeHandlersBuilder = ImmutableMap.builder();
+    	ImmutableMap.Builder<String, String> optionsBuilder = ImmutableMap.builder();
         // Defaults
         int port = PORT_NUMBER;
 
@@ -1848,7 +1853,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                 if (dot > 0) {
                     String name = args[i].substring(0, dot);
                     String value = args[i].substring(dot + 1, args[i].length());
-                    options.put(name, value);
+                    optionsBuilder.put(name, value);
                 }
             }
         }
@@ -1857,10 +1862,12 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
             rootDirs.add(new File(".").getAbsoluteFile());
         }
 
-        options.put("host", host);
-        options.put("port", "" + port);
-        options.put("quiet", String.valueOf(quiet));
-        options.put("home", serializeFileList(rootDirs));
+        optionsBuilder.put("host", host);
+        optionsBuilder.put("port", "" + port);
+        optionsBuilder.put("quiet", String.valueOf(quiet));
+        optionsBuilder.put("home", serializeFileList(rootDirs));
+        
+        ImmutableMap<String, String> options = optionsBuilder.build();
 
         for (WebServerPluginInfo info : ServiceLoader.load(WebServerPluginInfo.class)) {
             String[] mimeTypes = info.getMimeTypes();
@@ -1876,11 +1883,11 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                     }
                     System.out.println(").");
                 }
-                registerPluginForMimeType(indexFiles, mime, info.getWebServerPlugin(mime), options, mimeTypeHandlers);
+                registerPluginForMimeType(indexFiles, mime, info.getWebServerPlugin(mime), options, mimeTypeHandlersBuilder);
             }
         }
 
-        ServerRunner.executeInstance(new SridharFunctionalWebServer(host, port, rootDirs, quiet));
+        ServerRunner.executeInstance(new SridharFunctionalWebServer(host, port, rootDirs, quiet), mimeTypeHandlersBuilder.build());
     }
 
 	private static String serializeFileList(List<File> rootDirs) {
@@ -1905,9 +1912,9 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
          */
         private static final Logger LOG = Logger.getLogger(ServerRunner.class.getName());
 
-        public static void executeInstance(SridharFunctionalWebServer server) {
+        public static void executeInstance(SridharFunctionalWebServer server, Map mimeTypeHandlers) {
             try {
-                server.start();
+                server.start(mimeTypeHandlers);
             } catch (IOException ioe) {
                 System.err.println("Couldn't start server:\n" + ioe);
                 System.exit(-1);
@@ -1925,9 +1932,9 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         }
 
         @Deprecated // Unused
-        public static <T extends SridharFunctionalWebServer> void run(Class<T> serverClass) {
+        public static <T extends SridharFunctionalWebServer> void run(Class<T> serverClass, Map mimeTypeHandlers) {
             try {
-                executeInstance(serverClass.newInstance());
+                executeInstance(serverClass.newInstance(), mimeTypeHandlers);
             } catch (Exception e) {
                 ServerRunner.LOG.log(Level.SEVERE, "Cound nor create server", e);
             }
@@ -1936,8 +1943,8 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
     
 	private static void registerPluginForMimeType(String[] indexFiles,
 			String mimeType, WebServerPlugin plugin,
-			Map<String, String> commandLineOptions,
-			Map<String, WebServerPlugin> mimeTypeHandlers) {
+			ImmutableMap<String, String> commandLineOptions,
+			ImmutableMap.Builder<String, WebServerPlugin> mimeTypeHandlers) {
         if (mimeType == null || plugin == null) {
             return;
         }
@@ -2115,7 +2122,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
         return response;
     }
 
-    private Response respond(Map<String, String> headers, IHTTPSession session, String uri) {
+    private Response respond(Map<String, String> headers, IHTTPSession session, String uri, Map<String, WebServerPlugin> mimeTypeHandlers) {
         // Remove URL arguments
         uri = uri.trim().replace(File.separatorChar, '/');
         if (uri.indexOf('?') >= 0) {
@@ -2160,7 +2167,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                     return getForbiddenResponse("No directory listing.");
                 }
             } else {
-                return respond(headers, session, uri + indexFile);
+                return respond(headers, session, uri + indexFile, mimeTypeHandlers);
             }
         }
 
@@ -2171,7 +2178,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
             response = plugin.serveFile(uri, headers, session, f, mimeTypeForFile);
             if (response != null && response instanceof InternalRewrite) {
                 InternalRewrite rewrite = (InternalRewrite) response;
-                return respond(rewrite.getHeaders(), session, rewrite.getUri());
+                return respond(rewrite.getHeaders(), session, rewrite.getUri(), mimeTypeHandlers);
             }
         } else {
             response = serveFile(uri, headers, f, mimeTypeForFile);
@@ -2297,7 +2304,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
 
         return res;
     }
-    private Response serve(IHTTPSession session) {
+    private Response serve(IHTTPSession session, Map mimeTypeHandlers) {
         Map<String, String> header = session.getHeaders();
         Map<String, String> parms = session.getParms();
         String uri = session.getUri();
@@ -2323,7 +2330,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
                 return getInternalErrorResponse("given path is not a directory (" + homeDir + ").");
             }
         }
-        return respond(Collections.unmodifiableMap(header), session, uri);
+        return respond(Collections.unmodifiableMap(header), session, uri, mimeTypeHandlers);
     }
 
     private static Response newFixedFileResponse(File file, String mime) throws FileNotFoundException {
@@ -2337,7 +2344,7 @@ public class SridharFunctionalWebServer //extends SridharFunctionalWebServer
 
         boolean canServeUri(String uri, File rootDir);
 
-        void initialize(Map<String, String> commandLineOptions);
+        void initialize(ImmutableMap<String, String> commandLineOptions);
 
         Response serveFile(String uri, Map<String, String> headers, IHTTPSession session, File file, String mimeType);
     }
