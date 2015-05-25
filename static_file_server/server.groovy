@@ -212,10 +212,6 @@ public class FileServerGroovy {
 	}
 
 
-	public FileServerGroovy(String string) throws IOException {
-		this(8082, Paths.get("/sarnobat.garagebandbroken/trash/misc_sync_master/wwe").toFile());
-	}
-
 	/**
 	 * Stops the server.
 	 */
@@ -230,7 +226,7 @@ public class FileServerGroovy {
 	public static void main(String[] args) {
 		try {
 			new FileServerGroovy(8082,
-					Paths.get("/sarnobat.garagebandbroken/trash/misc_sync_master/").toFile());
+					Paths.get("/media/sarnobat/Unsorted/images").toFile());
 			System.out.println("Started");
 		} catch (IOException ioe) {
 			System.err.println("Couldn't start server:\n" + ioe);
